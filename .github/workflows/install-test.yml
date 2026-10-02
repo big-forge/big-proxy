@@ -1,0 +1,55 @@
+name: Install test
+
+# Runs the one-line installers exactly as a user would, against the latest published release.
+on:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Install with the one-liner
+        shell: pwsh
+        env:
+          PROXY_APP_NO_LAUNCH: '1'
+        run: irm https://raw.githubusercontent.com/big-forge/big-proxy/main/install.ps1 | iex
+      - name: Start it and check it answers
+        shell: pwsh
+        run: |
+          $exe = Join-Path $env:LOCALAPPDATA 'Programs\Proxy App\Proxy App.exe'
+          if (-not (Test-Path $exe)) { throw "not installed at $exe" }
+          $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'Proxy App.lnk'
+          if (-not (Test-Path $lnk)) { throw "no Start menu shortcut" }
+          "size: {0:N1} MB" -f ((Get-Item $exe).Length / 1MB)
+          $data = Join-Path $env:RUNNER_TEMP 'pa-data'
+          $p = Start-Process -FilePath $exe -ArgumentList '--hidden','--port','18898','--data-dir',$data -PassThru
+          Start-Sleep 6
+          if ($p.HasExited) { throw "the app exited right away (code $($p.ExitCode))" }
+          $page = (Invoke-WebRequest http://127.0.0.1:18898/ -UseBasicParsing).Content
+          $token = [regex]::Match($page, 'proxy-app-token" content="([^"]+)').Groups[1].Value
+          $state = Invoke-RestMethod http://127.0.0.1:18898/api/state -Headers @{ 'x-proxy-app-token' = $token }
+          "version: $($state.version)  platform: $($state.platform)  shell: $($state.shell)"
+          if ($state.platform -ne 'win32') { throw "wrong platform" }
+          if ($state.version -eq 'dev') { throw "version not stamped" }
+          if (-not (Test-Path (Join-Path $data 'browser-extension\manifest.json'))) { throw "extension files missing" }
+          $p.Kill()
+
+  mac:
+    runs-on: macos-latest
+    steps:
+      - name: Install with the one-liner
+        env:
+          PROXY_APP_NO_LAUNCH: '1'
+          PROXY_APP_DIR: ${{ runner.temp }}/Applications
+        run: curl -fsSL https://raw.githubusercontent.com/big-forge/big-proxy/main/install.sh | sh
+      - name: Start it and check it answers
+        run: |
+          APP="$RUNNER_TEMP/Applications/Proxy App.app"
+          codesign --verify --deep --strict "$APP"
+          du -sh "$APP"
+          "$APP/Contents/MacOS/Proxy App" --hidden --port 18898 --data-dir "$RUNNER_TEMP/pa-data" &
+          sleep 6
+          TOKEN=$(curl -s http://127.0.0.1:18898/ | grep -o 'proxy-app-token" content="[^"]*' | cut -d'"' -f3)
+          STATE=$(curl -s -H "x-proxy-app-token: $TOKEN" http://127.0.0.1:18898/api/state)
+          echo "$STATE" | python3 -c "import sys,json; s=json.load(sys.stdin); print('version', s['version'], s['platform']); assert s['version']!='dev'"
+          kill %1
