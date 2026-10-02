@@ -1,0 +1,188 @@
+@import 'tailwindcss';
+
+/* Network-cabinet palette: graphite surfaces, OM3 fiber aqua as the one accent
+   (connect + live traffic), amber and red only for status. Borders, no shadows. */
+:root {
+  --canvas: #f4f6f7;
+  --surface: #ffffff;
+  --sunken: #eef1f3;
+  --hover: rgba(15, 23, 30, 0.045);
+  --line: rgba(15, 23, 30, 0.1);
+  --line-strong: rgba(15, 23, 30, 0.17);
+  --ink: #11171c;
+  --ink-2: #48535d;
+  --ink-3: #66717b;
+  --fiber: #0b7d73;
+  --fiber-hover: #096b62;
+  --fiber-ink: #ffffff;
+  --fiber-soft: rgba(11, 125, 115, 0.1);
+  --fiber-text: #0a6f66;
+  --amber: #a15c00;
+  --amber-soft: rgba(196, 120, 0, 0.11);
+  --red: #c4322f;
+  --red-soft: rgba(196, 50, 47, 0.09);
+  --overlay: rgba(10, 14, 18, 0.4);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --canvas: #0f1215;
+    --surface: #151a1e;
+    --sunken: #0c0f12;
+    --hover: rgba(255, 255, 255, 0.045);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --ink: #e6eaed;
+    --ink-2: #a4aeb7;
+    --ink-3: #808b95;
+    --fiber: #35c6b8;
+    --fiber-hover: #52d3c6;
+    --fiber-ink: #04211e;
+    --fiber-soft: rgba(53, 198, 184, 0.12);
+    --fiber-text: #4fd3c5;
+    --amber: #e2a845;
+    --amber-soft: rgba(226, 168, 69, 0.12);
+    --red: #f06b67;
+    --red-soft: rgba(240, 107, 103, 0.12);
+    --overlay: rgba(0, 0, 0, 0.55);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --canvas: #0f1215;
+  --surface: #151a1e;
+  --sunken: #0c0f12;
+  --hover: rgba(255, 255, 255, 0.045);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --ink: #e6eaed;
+  --ink-2: #a4aeb7;
+  --ink-3: #808b95;
+  --fiber: #35c6b8;
+  --fiber-hover: #52d3c6;
+  --fiber-ink: #04211e;
+  --fiber-soft: rgba(53, 198, 184, 0.12);
+  --fiber-text: #4fd3c5;
+  --amber: #e2a845;
+  --amber-soft: rgba(226, 168, 69, 0.12);
+  --red: #f06b67;
+  --red-soft: rgba(240, 107, 103, 0.12);
+  --overlay: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-fiber: var(--fiber);
+  --color-fiber-hover: var(--fiber-hover);
+  --color-fiber-ink: var(--fiber-ink);
+  --color-fiber-soft: var(--fiber-soft);
+  --color-fiber-text: var(--fiber-text);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-danger: var(--red);
+  --color-danger-soft: var(--red-soft);
+  --color-overlay: var(--overlay);
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--fiber-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--fiber);
+  outline-offset: 2px;
+}
+
+/* Desktop title bar is the window's drag handle. */
+.drag {
+  -webkit-app-region: drag;
+}
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Live link: dashes travel along the route while traffic flows. */
+@keyframes flow {
+  to {
+    background-position: 16px 0;
+  }
+}
+@utility route-live {
+  background-color: transparent;
+  background-image: repeating-linear-gradient(90deg, var(--fiber) 0 8px, transparent 8px 16px);
+  animation: flow 0.9s linear infinite;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+.animate-enter {
+  animation: enter 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.animate-fade {
+  animation: fade 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .route-live {
+    animation: none !important;
+  }
+}

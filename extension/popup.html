@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Proxy App</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <img src="icons/32.png" alt="" width="20" height="20" />
+        <span>Proxy App</span>
+      </div>
+      <span class="pill" id="pill"><span class="dot" aria-hidden="true"></span><span id="pill-text">Checking</span></span>
+    </header>
+
+    <main>
+      <section class="hero" id="hero" aria-live="polite">
+        <div class="ip-row">
+          <span class="flag" id="flag" aria-hidden="true"></span>
+          <span class="ip" id="ip"></span>
+          <button type="button" class="icon" id="copy" aria-label="Copy IP address" hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>
+          </button>
+        </div>
+        <p class="title" id="title"></p>
+        <p class="sub" id="sub"></p>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="btn primary" id="connect" hidden>Connect</button>
+        <button type="button" class="btn primary" id="rotate" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-15.4-6.4L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 15.4 6.4L21 16"/><path d="M16 16h5v5"/></svg>
+          <span id="rotate-text">New IP</span>
+        </button>
+        <button type="button" class="btn quiet" id="disconnect" hidden>Disconnect</button>
+      </div>
+      <p class="error" id="error" role="alert" hidden></p>
+      <p class="notice" id="warn" hidden></p>
+    </main>
+
+    <section class="exits" id="exits-section">
+      <h2 id="exits-label">IP for this profile</h2>
+      <div class="list" id="exits" role="radiogroup" aria-labelledby="exits-label"></div>
+    </section>
+
+    <details class="settings">
+      <summary>Settings</summary>
+      <div class="settings-body">
+        <div class="setting">
+          <span id="off-label">When Proxy App is off</span>
+          <div class="seg" role="radiogroup" aria-labelledby="off-label">
+            <button type="button" role="radio" data-off="block">Block pages</button>
+            <button type="button" role="radio" data-off="direct">Normal connection</button>
+          </div>
+          <p class="hint" id="off-hint"></p>
+        </div>
+        <label class="row">
+          <span>Stop WebRTC from revealing my real IP</span>
+          <input type="checkbox" id="webrtc" class="switch" />
+        </label>
+        <label class="setting">
+          <span>Gateway port</span>
+          <input id="port" type="number" min="1024" max="65535" inputmode="numeric" />
+        </label>
+      </div>
+    </details>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
