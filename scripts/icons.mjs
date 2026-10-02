@@ -59,4 +59,13 @@ for (const size of [16, 32, 48, 128]) {
   await sharp(Buffer.from(favicon), { density: 72 * Math.ceil(size / 12) }).resize(size, size).png().toFile(`extension/icons/${size}.png`);
 }
 
+// Windows icon: a 256px PNG inside an ICO container (valid since Vista).
+const png256 = await sharp(Buffer.from(appIcon)).resize(256, 256).png().toBuffer();
+const ico = Buffer.alloc(22 + png256.length);
+ico.writeUInt16LE(0, 0); ico.writeUInt16LE(1, 2); ico.writeUInt16LE(1, 4);
+ico[6] = 0; ico[7] = 0; ico.writeUInt16LE(1, 10); ico.writeUInt16LE(32, 12);
+ico.writeUInt32LE(png256.length, 14); ico.writeUInt32LE(22, 18);
+png256.copy(ico, 22);
+fs.writeFileSync('build/icon.ico', ico);
+
 console.log('Icons written to build/, src/ui/public/ and extension/icons/');

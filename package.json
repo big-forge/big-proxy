@@ -1,94 +1,19 @@
 {
   "name": "proxy-app",
   "productName": "Proxy App",
-  "version": "0.1.0",
-  "description": "Route any device through your residential proxies and switch exit IPs instantly.",
+  "version": "0.2.0",
+  "description": "Route your computer, browser profiles and phones through residential proxies and switch IPs in one click.",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "main": "dist/electron/main.cjs",
-  "bin": {
-    "proxy-app": "dist/cli.cjs"
-  },
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "node scripts/build.mjs",
-    "start": "node dist/cli.cjs",
-    "app": "node scripts/build.mjs && node scripts/run-electron.mjs",
+    "build:ui": "vite build",
+    "build": "vite build && go build -trimpath -o dist/bin/proxyapp ./cmd/proxyapp",
+    "start": "go run ./cmd/proxyapp --web",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "node --import tsx --test test/*.test.ts",
-    "icons": "node scripts/icons.mjs",
-    "dist:mac": "node scripts/build.mjs && electron-builder --mac",
-    "dist:win": "node scripts/build.mjs && electron-builder --win",
-    "dist:linux": "node scripts/build.mjs && electron-builder --linux"
-  },
-  "build": {
-    "appId": "app.proxyapp.desktop",
-    "productName": "Proxy App",
-    "copyright": "MIT licensed",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "package.json"
-    ],
-    "asar": true,
-    "artifactName": "Proxy-App-${version}-${os}-${arch}.${ext}",
-    "mac": {
-      "category": "public.app-category.utilities",
-      "icon": "build/icon.png",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ]
-    },
-    "dmg": {
-      "title": "${productName} ${version}"
-    },
-    "win": {
-      "icon": "build/icon.png",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "Proxy-App-Setup-${version}.${ext}"
-    },
-    "linux": {
-      "icon": "build/icon.png",
-      "category": "Network",
-      "target": [
-        "AppImage"
-      ]
-    },
-    "afterPack": "scripts/adhoc-sign.cjs",
-    "asarUnpack": [
-      "dist/extension/**"
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "big-forge",
-      "repo": "big-proxy",
-      "releaseType": "release"
-    }
+    "test": "go vet ./... && go test ./... -race",
+    "icons": "node scripts/icons.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -98,20 +23,13 @@
     "@vitejs/plugin-react": "^6.1.1",
     "cmdk": "^1.1.1",
     "country-flag-icons": "^1.6.20",
-    "electron": "^44.5.1",
-    "electron-builder": "^26.15.3",
-    "esbuild": "^0.28.2",
     "lucide-react": "^1.49.0",
     "radix-ui": "^1.6.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.2"
-  },
-  "dependencies": {
-    "electron-updater": "^6.8.9"
   }
 }

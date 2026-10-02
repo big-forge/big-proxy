@@ -31,14 +31,15 @@ if ($env:PROXY_APP_VERSION) {
   $version = $release.tag_name.TrimStart('v')
 }
 
-$file = "Proxy-App-Setup-$version.exe"
+$file = "Proxy-App-$version-windows-x64.zip"
 $url = "https://github.com/$repo/releases/download/v$version/$file"
-$path = Join-Path $env:TEMP $file
+$zip = Join-Path $env:TEMP $file
+$dir = Join-Path $env:LOCALAPPDATA 'Programs\Proxy App'
 
 Write-Host "  Downloading Proxy App $version for Windows..."
-try { Invoke-WebRequest -Uri $url -OutFile $path -UseBasicParsing } catch { Fail "download failed: $url" }
+try { Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing } catch { Fail "download failed: $url" }
 
-# Close the running copy so the installer can replace it.
+# Close the running copy so it can be replaced.
 Get-Process -Name 'Proxy App' -ErrorAction SilentlyContinue | ForEach-Object {
   Write-Host "  Closing the running Proxy App..."
   $_.CloseMainWindow() | Out-Null
@@ -46,11 +47,18 @@ Get-Process -Name 'Proxy App' -ErrorAction SilentlyContinue | ForEach-Object {
 }
 
 Write-Host "  Installing (no administrator rights needed)..."
-$install = Start-Process -FilePath $path -ArgumentList '/S' -Wait -PassThru
-Remove-Item $path -Force -ErrorAction SilentlyContinue
-if ($install.ExitCode -ne 0) { Fail "the installer exited with code $($install.ExitCode)." }
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+try { Expand-Archive -Path $zip -DestinationPath $dir -Force } catch { Fail "couldn't unpack the download: $($_.Exception.Message)" }
+Remove-Item $zip -Force -ErrorAction SilentlyContinue
 
-$exe = Join-Path $env:LOCALAPPDATA 'Programs\Proxy App\Proxy App.exe'
+# Start menu entry
+$exe = Join-Path $dir 'Proxy App.exe'
+$shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'Proxy App.lnk'
+$link = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcut)
+$link.TargetPath = $exe
+$link.WorkingDirectory = $dir
+$link.Save()
+
 if (-not (Test-Path $exe)) { Fail "installed, but couldn't find the app at $exe." }
 Write-Host "  Installed: $exe"
 if (-not $env:PROXY_APP_NO_LAUNCH) {

@@ -48,6 +48,7 @@ export const api = {
   connect: () => call<AppState>('POST', '/api/connect'),
   disconnect: () => call<AppState>('POST', '/api/disconnect'),
   activate: (id: string) => call<AppState>('POST', `/api/exits/${id}/activate`),
+  exitUrl: (id: string) => call<{ url: string }>('GET', `/api/exits/${id}/url`),
   rotate: (id: string) => call<ExitCheck>('POST', `/api/exits/${id}/rotate`),
   check: (id: string) => call<ExitCheck>('POST', `/api/exits/${id}/check`),
   checkAll: () => call<AppState>('POST', '/api/exits/check-all'),

@@ -17,21 +17,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run build:ui
+      - run: go vet ./...
+      - run: go test ./... -race -count=1
 
-  build:
+  ui:
     needs: test
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            script: dist:mac
-          - os: windows-latest
-            script: dist:win
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,32 +36,87 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Unsigned builds. To sign, add CSC_LINK/CSC_KEY_PASSWORD (and APPLE_ID etc. for notarizing) as secrets.
-      - run: npm run ${{ matrix.script }} -- --publish never
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - run: npm run build:ui
       - uses: actions/upload-artifact@v4
         with:
-          name: proxy-app-${{ matrix.os }}
-          # The .yml and .blockmap files are what the in-app updater reads.
-          path: |
-            release/*.dmg
-            release/*.exe
-            release/latest*.yml
-            release/*.blockmap
+          name: ui
+          path: dist/ui
+
+  build:
+    needs: ui
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: mac
+            arch: arm64
+          - os: macos-latest
+            target: mac
+            arch: x64
+          - os: windows-latest
+            target: windows
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/download-artifact@v4
+        with:
+          name: ui
+          path: dist/ui
+      - name: Version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Build (macOS)
+        if: matrix.target == 'mac'
+        shell: bash
+        env:
+          CGO_ENABLED: '1'
+          GOARCH: ${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }}
+        run: |
+          mkdir -p dist/bin
+          go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o dist/bin/proxyapp ./cmd/proxyapp
+          node scripts/package.mjs mac ${{ matrix.arch }} "$VERSION" dist/bin/proxyapp
+
+      - name: Build (Windows)
+        if: matrix.target == 'windows'
+        shell: bash
+        env:
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p dist/bin
+          # App icon inside the .exe, and no console window.
+          go run github.com/akavel/rsrc@v0.10.2 -ico build/icon.ico -o cmd/proxyapp/rsrc_windows_amd64.syso
+          go build -trimpath -ldflags "-s -w -H windowsgui -X main.version=$VERSION" -o dist/bin/proxyapp.exe ./cmd/proxyapp
+          node scripts/package.mjs windows ${{ matrix.arch }} "$VERSION" dist/bin/proxyapp.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}-${{ matrix.arch }}
+          path: release/*
           if-no-files-found: error
 
   publish:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: release-*
           path: artifacts
           merge-multiple: true
+      - name: Checksums
+        working-directory: artifacts
+        run: sha256sum * > SHA256SUMS && cat SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
-          # Published, not a draft: the updater only sees published releases.
+          # Published, not a draft: the in-app updater only sees published releases.
           draft: false
           files: artifacts/*

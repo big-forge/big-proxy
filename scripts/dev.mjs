@@ -1,8 +1,8 @@
-// Development: core with hot reload + Vite dev server. Open http://localhost:5173
+// Development: the Go engine (API only) + the Vite dev server with hot reload. Open http://localhost:5173
 import { spawn } from 'node:child_process';
 
 const procs = [
-  ['core', 'npx', ['tsx', 'watch', '--clear-screen=false', 'src/cli.ts', '--dev']],
+  ['engine', 'go', ['run', './cmd/proxyapp', '--dev']],
   ['ui', 'npx', ['vite']],
 ].map(([name, cmd, args]) => {
   const p = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], shell: process.platform === 'win32' });
@@ -19,7 +19,7 @@ const procs = [
 });
 
 const stop = () => {
-  // SIGINT lets the core restore the system proxy before exiting.
+  // SIGINT lets the engine put the system proxy settings back before it exits.
   for (const p of procs) p.kill('SIGINT');
   setTimeout(() => process.exit(0), 3000).unref();
 };

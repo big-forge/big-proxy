@@ -40,7 +40,8 @@ export function SettingsView({ state }: { state: AppState }) {
   const [editing, setEditing] = useState<Account | null>(null);
   const [removing, setRemoving] = useState<Account | null>(null);
   const [adding, setAdding] = useState(false);
-  const desktop = state.shell === 'desktop';
+  // The tray app ('app' or the old Electron 'desktop') has updates and a start-at-login switch; plain web mode doesn't.
+  const desktop = state.shell !== 'web';
 
   return (
     <div className="mx-auto max-w-[780px] px-4 py-6 sm:px-6">
@@ -198,7 +199,7 @@ function UpdateLine({ state }: { state: AppState }) {
   else if (u?.status === 'none') text = `Proxy App ${state.version}. You have the latest version.`;
   else if (u?.status === 'downloading') text = `Downloading ${u.version ?? 'the update'}… ${u.progress ?? 0}%`;
   else if (u?.status === 'ready') text = `${u.version} is ready. Restart Proxy App to finish updating.`;
-  else if (u?.status === 'available') text = `${u.version} is available. This Mac build can't update itself yet, so download it and replace the app.`;
+  else if (u?.status === 'available') text = `${u.version} is available. This copy can't update itself (it isn't in a folder you can write to), so download the new version.`;
   else if (u?.status === 'error') text = `Couldn't check for updates: ${u.error}`;
   return <span className={u?.status === 'error' ? 'text-danger' : undefined}>{text}</span>;
 }

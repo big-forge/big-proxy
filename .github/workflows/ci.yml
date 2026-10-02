@@ -18,7 +18,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - run: npm run build:ui
+      - run: go vet ./...
+      - run: go test ./... -race -count=1
+      - run: go build -o dist/bin/ ./cmd/proxyapp
