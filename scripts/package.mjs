@@ -69,7 +69,8 @@ if (target === 'mac') {
   fs.copyFileSync(binary, path.join(work, 'Proxy App.exe'));
   const zip = path.resolve('release', `Proxy-App-${version}-windows-${arch}.zip`);
   fs.rmSync(zip, { force: true });
-  run('tar', ['-a', '-c', '-f', zip, '-C', work, 'Proxy App.exe']);
+  // PowerShell's own zipper: Git Bash's tar misreads drive letters like D:\ as a remote host.
+  run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Compress-Archive -LiteralPath '${path.join(work, 'Proxy App.exe')}' -DestinationPath '${zip}' -Force`]);
   console.log(`Wrote ${zip}`);
 } else {
   console.error(`unknown target ${target}`);
