@@ -2,7 +2,6 @@ import { ArrowDown, ArrowUp, Check, Copy, Ellipsis, Plus, Power, RefreshCw } fro
 import { DropdownMenu } from 'radix-ui';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { AppState, Exit } from '../../shared/types';
-import { upstreamFor } from '../../core/providers';
 import { RouteLine, Sparkline } from '../components/brand';
 import { ConfirmDialog } from '../components/Dialog';
 import { Flag } from '../components/Flag';
@@ -233,14 +232,6 @@ function ExitList({ state }: { state: AppState }) {
   );
 }
 
-function proxyUrl(exit: Exit, state: AppState): string | null {
-  const up = upstreamFor(exit, state.accounts);
-  if (!up) return null;
-  const auth = up.username || up.password ? `${up.username ?? ''}:${up.password ?? ''}@` : '';
-  const scheme = up.protocol === 'http' ? '' : `${up.protocol}://`;
-  return `${scheme}${auth}${up.host}:${up.port}`;
-}
-
 function ExitRow({ exit, index, state, onEdit, onRemove }: { exit: Exit; index: number; state: AppState; onEdit: () => void; onRemove: () => void }) {
   const active = exit.id === state.activeExitId;
   const checking = state.checking.includes(exit.id);
@@ -337,13 +328,15 @@ function ExitRow({ exit, index, state, onEdit, onRemove }: { exit: Exit; index: 
               )}
               <MenuItem
                 onSelect={() => {
-                  const url = proxyUrl(exit, state);
-                  if (!url) return;
-                  void navigator.clipboard.writeText(url).then(() => {
-                    setCopied(true);
-                    toast('Proxy URL copied. It includes the login, so share it carefully.');
-                    setTimeout(() => setCopied(false), 1500);
-                  });
+                  api
+                    .exitUrl(exit.id)
+                    .then(({ url }) => navigator.clipboard.writeText(url))
+                    .then(() => {
+                      setCopied(true);
+                      toast('Proxy URL copied. It includes the login, so share it carefully.');
+                      setTimeout(() => setCopied(false), 1500);
+                    })
+                    .catch(toastError);
                 }}
               >
                 {copied ? 'Copied' : 'Copy as proxy URL'}

@@ -26,9 +26,9 @@ Prefer a normal download? Get the file for your system from the [latest release]
 | --- | --- |
 | Mac with Apple chip (M1 and newer) | `Proxy-App-…-mac-arm64.dmg` |
 | Mac with Intel chip | `Proxy-App-…-mac-x64.dmg` |
-| Windows 10 / 11 | `Proxy-App-Setup-….exe` |
+| Windows 10 / 11 | `Proxy-App-…-windows-x64.zip` (unzip, open `Proxy App.exe`) |
 
-> The app isn't signed yet. If you downloaded it by hand, your computer will warn you once.
+> The app is small (under 10 MB) and isn't signed yet. If you downloaded it by hand, your computer will warn you once.
 > **Mac:** System Settings → Privacy & Security → **Open Anyway**.
 > **Windows:** **More info** → **Run anyway**.
 > The install commands above skip the Mac warning.
@@ -44,7 +44,7 @@ By default only what you choose uses the proxy. In the **Apps** tab, switch on t
 
 ## Update
 
-The app tells you when a new version is out. On Windows it updates itself; on Mac it opens the download page. You can also check in **Settings → Version**.
+The app updates itself. It checks for a new version in the background, downloads it, and shows **Restart to update**. You can also check in **Settings → Version**.
 
 ## Your data
 
@@ -52,16 +52,20 @@ Your proxy logins are saved only on your computer and are never sent anywhere ex
 
 ## For developers
 
-Needs Node.js 20 or newer.
+Needs Go 1.24+ and Node.js 20+ (Node is only used to build the UI).
 
 ```sh
 git clone https://github.com/big-forge/big-proxy
 cd big-proxy
 npm install
-npm run app        # build and open the desktop app
-npm test
+npm run build          # builds the UI, then dist/bin/proxyapp
+./dist/bin/proxyapp    # tray app; add --web for just the UI in a browser tab
+npm test               # go vet + go test -race
+npm run dev            # engine + Vite with hot reload on http://localhost:5173
 ```
 
-To release a new version, change `version` in `package.json`, commit, then run `git tag v0.2.0 && git push --tags`. GitHub builds and publishes the installers.
+The engine is Go (`internal/`): gateway, providers, system proxy, browser profiles and app routing. The screens are React (`src/ui/`) and the browser extension is plain JavaScript (`extension/`). Both are embedded into the one binary.
+
+To release a new version, commit, then run `git tag v0.3.0 && git push --tags`. GitHub builds the Mac and Windows packages and publishes them; installed copies pick the update up on their own.
 
 MIT licence.

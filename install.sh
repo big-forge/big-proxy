@@ -25,8 +25,8 @@ case "$os" in
     ;;
   Darwin) ;;
   Linux)
-    fail "there is no Linux desktop build yet. You can run the web version instead:
-    git clone https://github.com/$REPO && cd big-proxy && npm install && npm run build && npm start"
+    fail "there is no Linux desktop build yet. You can build the web version (needs Go and Node.js):
+    git clone https://github.com/$REPO && cd big-proxy && npm install && npm run build && ./dist/bin/proxyapp --web"
     ;;
   *) fail "unsupported system: $os" ;;
 esac

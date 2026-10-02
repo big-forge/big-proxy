@@ -103,7 +103,7 @@ export type ConnectionStatus = 'off' | 'connecting' | 'on' | 'error';
 export interface AppState {
   version: string;
   platform: string;
-  shell: 'desktop' | 'web';
+  shell: 'desktop' | 'app' | 'web';
   dataDir: string;
   status: ConnectionStatus;
   statusError?: string;

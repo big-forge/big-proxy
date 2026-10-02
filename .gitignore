@@ -9,3 +9,6 @@ release/
 .env.*
 !.env.example
 proxies.local.txt
+
+# Generated in CI
+cmd/proxyapp/*.syso
