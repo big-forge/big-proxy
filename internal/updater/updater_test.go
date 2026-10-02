@@ -65,7 +65,8 @@ func TestUnzipKeepsAppBundleShape(t *testing.T) {
 		t.Fatal(err)
 	}
 	st, err := os.Stat(filepath.Join(out, "Proxy App.app", "Contents", "MacOS", "Proxy App"))
-	if err != nil || st.Mode().Perm()&0o100 == 0 {
+	// Windows has no executable bit.
+	if err != nil || (runtime.GOOS != "windows" && st.Mode().Perm()&0o100 == 0) {
 		t.Fatalf("executable bit lost: %v %v", st, err)
 	}
 }

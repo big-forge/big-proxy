@@ -147,11 +147,13 @@ func (g *Gateway) OnActivity(fn func(types.ActivityEntry)) {
 	g.mu.Unlock()
 }
 
+// Windows reports these with its own error codes and wording, so match the text as well.
 func portMessage(err error, port int, fix string) string {
-	if errors.Is(err, syscall.EADDRINUSE) {
+	text := strings.ToLower(err.Error())
+	if errors.Is(err, syscall.EADDRINUSE) || strings.Contains(text, "address already in use") || strings.Contains(text, "only one usage of each socket address") {
 		return fmt.Sprintf("Port %d is already in use by another app. %s", port, fix)
 	}
-	if errors.Is(err, syscall.EACCES) {
+	if errors.Is(err, syscall.EACCES) || strings.Contains(text, "forbidden by its access permissions") {
 		return fmt.Sprintf("This computer won't let Proxy App use port %d. %s", port, fix)
 	}
 	return err.Error()

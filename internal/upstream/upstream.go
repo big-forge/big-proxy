@@ -98,7 +98,7 @@ func isIP(h string) bool { _, err := netip.ParseAddr(h); return err == nil }
 func socketError(err error, what string) *Error {
 	var dns *net.DNSError
 	switch {
-	case errors.Is(err, syscall.ECONNREFUSED):
+	case errors.Is(err, syscall.ECONNREFUSED) || strings.Contains(strings.ToLower(err.Error()), "actively refused"):
 		return newErr("refused", fmt.Sprintf("Couldn't connect to %s (connection refused)", what))
 	case errors.As(err, &dns):
 		if dns.IsTimeout {
